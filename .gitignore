@@ -1,0 +1,7 @@
+*.swp
+*.RData
+*.Rhistory
+*.pyc
+__pycache__
+*.o
+*.exe
