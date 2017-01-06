@@ -57,6 +57,16 @@ def main(argv):
             help='Survey step distance')
     argparser.add_argument('--surfacetvd', '-st', type=float, default=0,
             help='Surface TVD')
+    argparser.add_argument('--json', '-j', action='store_true',
+            help='JSON output?')
+    argparser.add_argument('--jsonvar', '-jv', type=str, default=None,
+            help="'JSON' variable name")
+    argparser.add_argument('--namefield', '-fn', type=str, default='Name',
+            help='Well name output field')
+    argparser.add_argument('--formationfield', '-ff', type=str,
+            default='Formation', help='Formation name output field')
+    argparser.add_argument('--surveyfield', '-fs', type=str,
+            default='Survey', help='Survey output field (JSON only)')
     args = argparser.parse_args(argv[1:])
 
     wells = list(ng.well_names(args.wells))
@@ -88,12 +98,48 @@ def main(argv):
         for _ in range(args.wells)]
 
     seq = zip(wells, formations, surveys, offsets)
-    output_tables(seq)
+    if args.json:
+        output_json(seq, len(wells), args.jsonvar,
+                args.namefield, args.formationfield, args.surveyfield)
+    else:
+        output_tables(seq, args.namefield, args.formationfield)
 
-def output_tables(seq):
-    print('\t'.join(('Well', 'Formation', 'x', 'y', 'z')))
+def output_tables(seq, name_field='Well', frm_field='Formation'):
+    print('\t'.join((name_field, frm_field, 'x', 'y', 'z')))
     for (w, f, s, (x, y)) in seq:
         for p in s:
             print('\t'.join((w, f, str(p[0] + x), str(p[1] + y), str(p[2]))))
+
+def output_json(seq, n_wells, var=None, name_field='Well',
+        frm_field='Formation', survey_field='Survey'):
+    if var is not None:
+        prefix = 'var {} = '.format(var)
+    else:
+        prefix = ''
+    print(prefix + '{')
+    for (i, (w, f, s, (x, y))) in enumerate(seq):
+        print('\t"{}": {{'.format(w))
+
+        print('\t\t"{}": "{}",'.format(name_field, w))
+        print('\t\t"{}": "{}",'.format(frm_field, f))
+        print('\t\t"{}": {{'.format(survey_field))
+
+        s = list(s)
+
+        print('\t\t\t"x": [')
+        print(','.join(str(p[0] + x) for p in s))
+        print('\t\t\t],')
+
+        print('\t\t\t"y": [')
+        print(','.join(str(p[1] + y) for p in s))
+        print('\t\t\t],')
+
+        print('\t\t\t"z": [')
+        print(','.join(str(p[2]) for p in s))
+        print('\t\t\t]')
+
+        print('\t\t}')
+        print('\t}' + (',' if i < (n_wells - 1) else ''))
+    print('}')
 
 sys.exit(main(sys.argv))
