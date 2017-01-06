@@ -17,20 +17,18 @@
 import random
 from math import sqrt, sin, cos
 
-BUILD_FT = 200
-
 def jitter(pts, noise_sd):
     for p in pts:
         yield tuple(v + random.gauss(0, noise_sd) for v in p)
 
 def deviation_survey(tvd, lat_length, angle, noise_sd = 1,
-        surface_tvd = 0, step = 1):
+        surface_tvd = 0, step = 1, build_ft = 400):
     x = 0
     y = 0
     z = 0
     survey = list()
 
-    while z > tvd + BUILD_FT:
+    while z > tvd + build_ft:
         survey.append((x, y, z))
         z -= step
 
@@ -38,8 +36,7 @@ def deviation_survey(tvd, lat_length, angle, noise_sd = 1,
     while z > tvd and hz_distance < lat_length:
         survey.append((x, y, z))
         hz_distance = sqrt(x ** 2 + y ** 2)
-        build_frac = (z - (tvd + BUILD_FT)) / -BUILD_FT
-        print('BUILDFRAC: {}'.format(build_frac))
+        build_frac = (z - (tvd + build_ft)) / -build_ft
         hz_step = step * build_frac
         vert_step = step * (1 - build_frac)
         x_step = hz_step * cos(angle)

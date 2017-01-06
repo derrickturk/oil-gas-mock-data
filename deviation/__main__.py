@@ -20,6 +20,8 @@ import deviation
 import deviation.namegen as ng
 import deviation.surveygen as sg
 
+from math import pi as PI
+
 def main(argv):
     if len(argv) < 2 or len(argv) > 3:
         print('Usage: python -m {} num-wells [num-formations]'.format(
@@ -31,7 +33,7 @@ def main(argv):
 
     wells = ng.well_names(n_wells)
     formations = ng.formation_names(n_wells, n_formations)
-    surveys = (sg.deviation_survey(-1000, 4000, 0.93) for _ in wells)
+    surveys = (sg.deviation_survey(-10000, 5000, PI / 4) for _ in wells)
 
     for (w, f, s) in zip(wells, formations, surveys):
         print('{}: {} formation'.format(w, f))
