@@ -77,6 +77,7 @@ def main(argv):
         frm_target_lengths[frm_index[f]] +
           random.uniform(-args.lateralnoise, args.lateralnoise),
         frm_target_angles[frm_index[f]] +
+          (PI if random.random() > 0.5 else 0) +
           random.uniform(-anglenoise_rad, anglenoise_rad),
         noise_sd=args.surveynoise, surface_tvd=args.surfacetvd,
         step=args.step, build=args.build)
@@ -86,9 +87,13 @@ def main(argv):
         random.uniform(-args.fieldY / 2, args.fieldY / 2))
         for _ in range(args.wells)]
 
-    for (w, f, s, (x, y)) in zip(wells, formations, surveys, offsets):
-        print('{}: {} formation'.format(w, f))
+    seq = zip(wells, formations, surveys, offsets)
+    output_tables(seq)
+
+def output_tables(seq):
+    print('\t'.join(('Well', 'Formation', 'x', 'y', 'z')))
+    for (w, f, s, (x, y)) in seq:
         for p in s:
-            print((p[0] + x, p[1] + y, p[2]))
+            print('\t'.join((w, f, str(p[0] + x), str(p[1] + y), str(p[2]))))
 
 sys.exit(main(sys.argv))
