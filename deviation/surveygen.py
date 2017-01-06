@@ -30,11 +30,24 @@ def deviation_survey(tvd, lat_length, angle, noise_sd = 1,
     z = 0
     survey = list()
 
-    while z > tvd:
+    while z > tvd + BUILD_FT:
         survey.append((x, y, z))
-        z = z - step
+        z -= step
 
     hz_distance = 0
+    while z > tvd and hz_distance < lat_length:
+        survey.append((x, y, z))
+        hz_distance = sqrt(x ** 2 + y ** 2)
+        build_frac = (z - (tvd + BUILD_FT)) / -BUILD_FT
+        print('BUILDFRAC: {}'.format(build_frac))
+        hz_step = step * build_frac
+        vert_step = step * (1 - build_frac)
+        x_step = hz_step * cos(angle)
+        y_step = hz_step * sin(angle)
+        x += x_step
+        y += y_step
+        z -= vert_step
+
     x_step = step * cos(angle)
     y_step = step * sin(angle)
     while hz_distance < lat_length:
