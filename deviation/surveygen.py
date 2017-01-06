@@ -19,7 +19,11 @@ from math import sqrt, sin, cos
 
 def jitter(pts, noise_sd):
     for p in pts:
-        yield tuple(v + random.gauss(0, noise_sd) for v in p)
+        yield (
+                p[0] + random.gauss(0, noise_sd),
+                p[1] + random.gauss(0, noise_sd),
+                p[2]
+        )
 
 def deviation_survey(tvd, lat_length, angle, noise_sd = 1,
         surface_tvd = 0, step = 1, build = 400):
