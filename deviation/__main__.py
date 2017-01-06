@@ -25,49 +25,7 @@ import random
 from math import pi as PI
 
 def main(argv):
-    argparser = argparse.ArgumentParser(
-            description='Generate mock horizontal wellbore deviation surveys.',
-            prog='python -m {}'.format(deviation.__name__))
-    argparser.add_argument('wells', type=int, help='Number of wellbores')
-    argparser.add_argument('--formations', '-f', type=int, default=1,
-            help='Number of distinct formations')
-    argparser.add_argument('--fieldX', '-x', type=float, default=50000,
-            help='Field dimensions (X)')
-    argparser.add_argument('--fieldY', '-y', type=float, default=50000,
-            help='Field dimensions (Y)')
-    argparser.add_argument('--mintvd', '-t', type=float, default=5000,
-            help='Minimum by-formation target TVD')
-    argparser.add_argument('--maxtvd', '-T', type=float, default=15000,
-            help='Maximum by-formation target TVD')
-    argparser.add_argument('--minlateral', '-l', type=float, default=3000,
-            help='Minimum by-formation target lateral length')
-    argparser.add_argument('--maxlateral', '-L', type=float, default=6000,
-            help='Maximum by-formation target lateral length')
-    argparser.add_argument('--tvdnoise', '-nt', type=float, default=200,
-            help="TVD 'noise' (+/-)")
-    argparser.add_argument('--lateralnoise', '-nl', type=float, default=100,
-            help="Lateral length 'noise' (+/-)")
-    argparser.add_argument('--anglenoise', '-na', type=float, default=5,
-            help="Angle 'noise' (+/-, degrees)")
-    argparser.add_argument('--surveynoise', '-ns', type=float, default=1,
-            help="Survey 'noise' (std. dev.)")
-    argparser.add_argument('--build', '-b', type=float, default=400,
-            help='Build section length')
-    argparser.add_argument('--step', '-s', type=float, default=1,
-            help='Survey step distance')
-    argparser.add_argument('--surfacetvd', '-st', type=float, default=0,
-            help='Surface TVD')
-    argparser.add_argument('--json', '-j', action='store_true',
-            help='JSON output?')
-    argparser.add_argument('--jsonvar', '-jv', type=str, default=None,
-            help="'JSON' variable name")
-    argparser.add_argument('--namefield', '-fn', type=str, default='Name',
-            help='Well name output field')
-    argparser.add_argument('--formationfield', '-ff', type=str,
-            default='Formation', help='Formation name output field')
-    argparser.add_argument('--surveyfield', '-fs', type=str,
-            default='Survey', help='Survey output field (JSON only)')
-    args = argparser.parse_args(argv[1:])
+    args = argparser().parse_args(argv[1:])
 
     wells = list(ng.well_names(args.wells))
     formations = list(ng.formation_names(args.wells, args.formations))
@@ -103,6 +61,51 @@ def main(argv):
                 args.namefield, args.formationfield, args.surveyfield)
     else:
         output_tables(seq, args.namefield, args.formationfield)
+
+def argparser():
+    parser = argparse.ArgumentParser(
+            description='Generate mock horizontal wellbore deviation surveys.',
+            prog='python -m {}'.format(deviation.__name__))
+    parser.add_argument('wells', type=int, help='Number of wellbores')
+    parser.add_argument('--formations', '-f', type=int, default=1,
+            help='Number of distinct formations')
+    parser.add_argument('--fieldX', '-x', type=float, default=50000,
+            help='Field dimensions (X)')
+    parser.add_argument('--fieldY', '-y', type=float, default=50000,
+            help='Field dimensions (Y)')
+    parser.add_argument('--mintvd', '-t', type=float, default=5000,
+            help='Minimum by-formation target TVD')
+    parser.add_argument('--maxtvd', '-T', type=float, default=15000,
+            help='Maximum by-formation target TVD')
+    parser.add_argument('--minlateral', '-l', type=float, default=3000,
+            help='Minimum by-formation target lateral length')
+    parser.add_argument('--maxlateral', '-L', type=float, default=6000,
+            help='Maximum by-formation target lateral length')
+    parser.add_argument('--tvdnoise', '-nt', type=float, default=200,
+            help="TVD 'noise' (+/-)")
+    parser.add_argument('--lateralnoise', '-nl', type=float, default=100,
+            help="Lateral length 'noise' (+/-)")
+    parser.add_argument('--anglenoise', '-na', type=float, default=5,
+            help="Angle 'noise' (+/-, degrees)")
+    parser.add_argument('--surveynoise', '-ns', type=float, default=1,
+            help="Survey 'noise' (std. dev.)")
+    parser.add_argument('--build', '-b', type=float, default=400,
+            help='Build section length')
+    parser.add_argument('--step', '-s', type=float, default=1,
+            help='Survey step distance')
+    parser.add_argument('--surfacetvd', '-st', type=float, default=0,
+            help='Surface TVD')
+    parser.add_argument('--json', '-j', action='store_true',
+            help='JSON output?')
+    parser.add_argument('--jsonvar', '-jv', type=str, default=None,
+            help="'JSON' variable name")
+    parser.add_argument('--namefield', '-fn', type=str, default='Name',
+            help='Well name output field')
+    parser.add_argument('--formationfield', '-ff', type=str,
+            default='Formation', help='Formation name output field')
+    parser.add_argument('--surveyfield', '-fs', type=str,
+            default='Survey', help='Survey output field (JSON only)')
+    return parser
 
 def output_tables(seq, name_field='Well', frm_field='Formation'):
     print('\t'.join((name_field, frm_field, 'x', 'y', 'z')))
