@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import argparse
 
 import deviation
 import deviation.namegen as ng
@@ -24,25 +25,27 @@ import random
 from math import pi as PI
 
 def main(argv):
-    if len(argv) < 2 or len(argv) > 5:
-        print(('Usage: python -m {} num-wells [num-formations] ' +
-            '[fieldX] [fieldY]').format(deviation.__name__), file=sys.stderr)
-        return 0
+    argparser = argparse.ArgumentParser(
+            description='Generate mock horizontal wellbore deviation surveys.',
+            prog='python -m {}'.format(deviation.__name__))
+    argparser.add_argument('wells', type=int, help='Number of wellbores')
+    argparser.add_argument('--formations', '-f', type=int, default=1,
+            help='Number of distinct formations')
+    argparser.add_argument('--fieldX', '-x', type=float, default=50000,
+            help='Field dimensions (X)')
+    argparser.add_argument('--fieldY', '-y', type=float, default=50000,
+            help='Field dimensions (Y)')
+    args = argparser.parse_args(argv[1:])
 
-    n_wells = int(argv[1])
-    n_formations = int(argv[2]) if len(argv) >= 3 else 1
-    field_x = float(argv[3]) if len(argv) >= 4 else 50000
-    field_y = float(argv[4]) if len(argv) >= 5 else 50000
-
-    wells = list(ng.well_names(n_wells))
-    formations = list(ng.formation_names(n_wells, n_formations))
+    wells = list(ng.well_names(args.wells))
+    formations = list(ng.formation_names(args.wells, args.formations))
 
     frm_target_tvds = [random.uniform(-5000, -15000)
-            for _ in range(n_formations)]
+            for _ in range(args.formations)]
     frm_target_lengths = [random.uniform(3000, 6000)
-            for _ in range(n_formations)]
+            for _ in range(args.formations)]
     frm_target_angles = [random.uniform(0, 2 * PI)
-            for _ in range(n_formations)]
+            for _ in range(args.formations)]
     frm_index = { f : i for (i, f) in enumerate(set(formations)) }
 
     surveys = (sg.deviation_survey(
@@ -51,9 +54,9 @@ def main(argv):
         frm_target_angles[frm_index[f]] + random.uniform(-PI / 16, PI / 16))
         for f in formations)
 
-    offsets = [(random.uniform(-field_x / 2, field_x / 2),
-        random.uniform(-field_y / 2, field_y / 2))
-        for _ in range(n_wells)]
+    offsets = [(random.uniform(-args.fieldX / 2, args.fieldX / 2),
+        random.uniform(-args.fieldY / 2, args.fieldY / 2))
+        for _ in range(args.wells)]
 
     for (w, f, s, (x, y)) in zip(wells, formations, surveys, offsets):
         print('{}: {} formation'.format(w, f))
