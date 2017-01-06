@@ -20,25 +20,44 @@ import deviation
 import deviation.namegen as ng
 import deviation.surveygen as sg
 
+import random
 from math import pi as PI
 
 def main(argv):
-    if len(argv) < 2 or len(argv) > 3:
-        print('Usage: python -m {} num-wells [num-formations]'.format(
-            deviation.__name__), file=sys.stderr)
+    if len(argv) < 2 or len(argv) > 5:
+        print(('Usage: python -m {} num-wells [num-formations] ' +
+            '[fieldX] [fieldY]').format(deviation.__name__), file=sys.stderr)
         return 0
 
     n_wells = int(argv[1])
-    n_formations = int(argv[2]) if len(argv) == 3 else 1
+    n_formations = int(argv[2]) if len(argv) >= 3 else 1
+    field_x = float(argv[3]) if len(argv) >= 4 else 50000
+    field_y = float(argv[4]) if len(argv) >= 5 else 50000
 
-    wells = ng.well_names(n_wells)
-    formations = ng.formation_names(n_wells, n_formations)
-    surveys = (sg.deviation_survey(-10000, 5000, PI / 4)
-            for _ in range(n_wells))
+    wells = list(ng.well_names(n_wells))
+    formations = list(ng.formation_names(n_wells, n_formations))
 
-    for (w, f, s) in zip(wells, formations, surveys):
+    frm_target_tvds = [random.uniform(-5000, -15000)
+            for _ in range(n_formations)]
+    frm_target_lengths = [random.uniform(3000, 6000)
+            for _ in range(n_formations)]
+    frm_target_angles = [random.uniform(0, 2 * PI)
+            for _ in range(n_formations)]
+    frm_index = { f : i for (i, f) in enumerate(set(formations)) }
+
+    surveys = (sg.deviation_survey(
+        frm_target_tvds[frm_index[f]] + random.uniform(-200, 200),
+        frm_target_lengths[frm_index[f]] + random.uniform(-100, 100),
+        frm_target_angles[frm_index[f]] + random.uniform(-PI / 16, PI / 16))
+        for f in formations)
+
+    offsets = [(random.uniform(-field_x / 2, field_x / 2),
+        random.uniform(-field_y / 2, field_y / 2))
+        for _ in range(n_wells)]
+
+    for (w, f, s, (x, y)) in zip(wells, formations, surveys, offsets):
         print('{}: {} formation'.format(w, f))
         for p in s:
-            print(p)
+            print((p[0] + x, p[1] + y, p[2]))
 
 sys.exit(main(sys.argv))
