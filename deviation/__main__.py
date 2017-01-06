@@ -35,23 +35,51 @@ def main(argv):
             help='Field dimensions (X)')
     argparser.add_argument('--fieldY', '-y', type=float, default=50000,
             help='Field dimensions (Y)')
+    argparser.add_argument('--mintvd', '-t', type=float, default=5000,
+            help='Minimum by-formation target TVD')
+    argparser.add_argument('--maxtvd', '-T', type=float, default=15000,
+            help='Maximum by-formation target TVD')
+    argparser.add_argument('--minlateral', '-l', type=float, default=3000,
+            help='Minimum by-formation target lateral length')
+    argparser.add_argument('--maxlateral', '-L', type=float, default=6000,
+            help='Maximum by-formation target lateral length')
+    argparser.add_argument('--tvdnoise', '-nt', type=float, default=200,
+            help="TVD 'noise' (+/-)")
+    argparser.add_argument('--lateralnoise', '-nl', type=float, default=100,
+            help="Lateral length 'noise' (+/-)")
+    argparser.add_argument('--anglenoise', '-na', type=float, default=5,
+            help="Angle 'noise' (+/-, degrees)")
+    argparser.add_argument('--surveynoise', '-ns', type=float, default=1,
+            help="Survey 'noise' (std. dev.)")
+    argparser.add_argument('--build', '-b', type=float, default=400,
+            help='Build section length')
+    argparser.add_argument('--step', '-s', type=float, default=1,
+            help='Survey step distance')
+    argparser.add_argument('--surfacetvd', '-st', type=float, default=0,
+            help='Surface TVD')
     args = argparser.parse_args(argv[1:])
 
     wells = list(ng.well_names(args.wells))
     formations = list(ng.formation_names(args.wells, args.formations))
 
-    frm_target_tvds = [random.uniform(-5000, -15000)
+    frm_target_tvds = [random.uniform(-args.mintvd, -args.maxtvd)
             for _ in range(args.formations)]
-    frm_target_lengths = [random.uniform(3000, 6000)
+    frm_target_lengths = [random.uniform(args.minlateral, args.maxlateral)
             for _ in range(args.formations)]
     frm_target_angles = [random.uniform(0, 2 * PI)
             for _ in range(args.formations)]
     frm_index = { f : i for (i, f) in enumerate(set(formations)) }
 
+    anglenoise_rad = args.anglenoise * PI / 180
     surveys = (sg.deviation_survey(
-        frm_target_tvds[frm_index[f]] + random.uniform(-200, 200),
-        frm_target_lengths[frm_index[f]] + random.uniform(-100, 100),
-        frm_target_angles[frm_index[f]] + random.uniform(-PI / 16, PI / 16))
+        frm_target_tvds[frm_index[f]] +
+          random.uniform(-args.tvdnoise, args.tvdnoise),
+        frm_target_lengths[frm_index[f]] +
+          random.uniform(-args.lateralnoise, args.lateralnoise),
+        frm_target_angles[frm_index[f]] +
+          random.uniform(-anglenoise_rad, anglenoise_rad),
+        noise_sd=args.surveynoise, surface_tvd=args.surfacetvd,
+        step=args.step, build=args.build)
         for f in formations)
 
     offsets = [(random.uniform(-args.fieldX / 2, args.fieldX / 2),
