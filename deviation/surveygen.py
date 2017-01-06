@@ -14,28 +14,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+import random
+from math import sqrt, sin, cos
 
-import deviation
-import deviation.namegen as ng
-import deviation.surveygen as sg
+BUILD_FT = 200
 
-def main(argv):
-    if len(argv) < 2 or len(argv) > 3:
-        print('Usage: python -m {} num-wells [num-formations]'.format(
-            deviation.__name__), file=sys.stderr)
-        return 0
+def jitter(pts, noise_sd):
+    for p in pts:
+        yield tuple(v + random.gauss(0, noise_sd) for v in p)
 
-    n_wells = int(argv[1])
-    n_formations = int(argv[2]) if len(argv) == 3 else 1
+def deviation_survey(tvd, lat_length, angle, noise_sd = 1,
+        surface_tvd = 0, step = 1):
+    x = 0
+    y = 0
+    z = 0
+    survey = list()
 
-    wells = ng.well_names(n_wells)
-    formations = ng.formation_names(n_wells, n_formations)
-    surveys = (sg.deviation_survey(-1000, 4000, 0.93) for _ in wells)
+    while z > tvd:
+        survey.append((x, y, z))
+        z = z - step
 
-    for (w, f, s) in zip(wells, formations, surveys):
-        print('{}: {} formation'.format(w, f))
-        for p in s:
-            print(p)
+    hz_distance = 0
+    x_step = step * cos(angle)
+    y_step = step * sin(angle)
+    while hz_distance < lat_length:
+        survey.append((x, y, z))
+        hz_distance = sqrt(x ** 2 + y ** 2)
+        x += x_step
+        y += y_step
 
-sys.exit(main(sys.argv))
+    return jitter(survey, noise_sd)
